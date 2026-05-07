@@ -3,5 +3,5 @@ pandas
 numpy
 plotly
 scikit-learn
+tensorflow
 joblib
-tensorflow-cpu==2.15.0
