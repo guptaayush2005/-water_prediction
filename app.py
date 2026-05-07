@@ -3,6 +3,9 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
+from tensorflow.keras.models import load_model
+import joblib
+
 # =========================
 # PAGE CONFIG
 # =========================
@@ -17,6 +20,14 @@ st.set_page_config(
 # =========================
 
 df = pd.read_csv("cleaned_global_water_consumption.csv")
+
+# =========================
+# LOAD LSTM MODEL
+# =========================
+
+model = load_model("water_model.h5", compile=False)
+
+scaler = joblib.load("scaler.pkl")
 
 # =========================
 # SIDEBAR
@@ -156,22 +167,46 @@ elif menu == "Prediction":
 
     if st.button("Predict Water Usage"):
 
-        prediction = np.mean([
+        # PREPARE INPUT
+
+        input_data = np.array([
             day1, day2, day3,
             day4, day5, day6, day7
-        ])
+        ]).reshape(-1, 1)
+
+        # SCALE INPUT
+
+        scaled_input = scaler.transform(input_data)
+
+        # RESHAPE FOR LSTM
+
+        X_test = scaled_input.reshape((1, 7, 1))
+
+        # PREDICTION
+
+        prediction = model.predict(X_test)
+
+        # INVERSE SCALE
+
+        prediction_value = scaler.inverse_transform(prediction)
+
+        predicted = prediction_value[0][0]
+
+        # SHOW RESULT
 
         st.success(
-            f"Predicted Next Day Water Usage: {prediction:.2f} Litres"
+            f"Predicted Next Day Water Usage: {predicted:.2f} Litres"
         )
 
-        if prediction > 500:
+        # SMART ALERTS
+
+        if predicted > 500:
 
             st.error(
                 "⚠️ High Water Usage Detected! Please reduce usage."
             )
 
-        elif prediction > 300:
+        elif predicted > 300:
 
             st.warning(
                 "💧 Moderate Usage. Try saving more water."
