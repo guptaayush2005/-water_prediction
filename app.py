@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
+from sklearn.linear_model import LinearRegression
+
 # =========================
 # PAGE CONFIG
 # =========================
@@ -17,6 +19,18 @@ st.set_page_config(
 # =========================
 
 df = pd.read_csv("cleaned_global_water_consumption.csv")
+
+# =========================
+# SIMPLE ML MODEL
+# =========================
+
+X = np.array([[100], [200], [300], [400], [500], [600]])
+
+y = np.array([120, 220, 320, 420, 520, 620])
+
+simple_model = LinearRegression()
+
+simple_model.fit(X, y)
 
 # =========================
 # SIDEBAR
@@ -119,7 +133,7 @@ if menu == "Dashboard":
 
     # AREA CHART
 
-    st.header("🌧️ Agricultural Water Usage")
+    st.header("🌧 Agricultural Water Usage")
 
     area_fig = px.area(
         country_data,
@@ -154,12 +168,16 @@ elif menu == "Prediction":
     day6 = st.sidebar.number_input("Day 6 Usage", min_value=0.0)
     day7 = st.sidebar.number_input("Day 7 Usage", min_value=0.0)
 
+    user_input = [
+        day1, day2, day3,
+        day4, day5, day6, day7
+    ]
+
     if st.button("Predict Water Usage"):
 
-        prediction = np.mean([
-            day1, day2, day3,
-            day4, day5, day6, day7
-        ])
+        avg_usage = sum(user_input) / len(user_input)
+
+        prediction = simple_model.predict([[avg_usage]])[0]
 
         st.success(
             f"Predicted Next Day Water Usage: {prediction:.2f} Litres"
@@ -168,7 +186,7 @@ elif menu == "Prediction":
         if prediction > 500:
 
             st.error(
-                "⚠️ High Water Usage Detected! Please reduce usage."
+                "⚠ High Water Usage Predicted. Please conserve water."
             )
 
         elif prediction > 300:
