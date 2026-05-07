@@ -119,7 +119,7 @@ if menu == "Dashboard":
 
     # AREA CHART
 
-    st.header("🌧 Agricultural Water Usage")
+    st.header("🌧️ Agricultural Water Usage")
 
     area_fig = px.area(
         country_data,
