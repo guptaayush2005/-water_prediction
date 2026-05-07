@@ -14,23 +14,42 @@ st.set_page_config(
 # =========================
 # LOAD DATA
 # =========================
-df = pd.read_csv("cleaned_global_water_consumption.csv")
+df = pd.read_csv("dataset.csv")
+
+# =========================
+# CLEAN COLUMN NAMES
+# =========================
+df.columns = df.columns.str.strip()
+
+# =========================
+# RENAME COLUMNS
+# =========================
+df.rename(columns={
+    df.columns[0]: "Country",
+    df.columns[1]: "Year",
+    df.columns[2]: "Water Consumption",
+}, inplace=True)
+
+# =========================
+# SIDEBAR
+# =========================
+st.sidebar.title("Filters")
+
+country = st.sidebar.selectbox(
+    "Select Country",
+    df["Country"].unique()
+)
+
+filtered_df = df[df["Country"] == country]
 
 # =========================
 # TITLE
 # =========================
 st.title("💧 AI Water Analytics Dashboard")
-st.subheader("Water Consumption Analysis & Prediction System")
 
-# =========================
-# SIDEBAR
-# =========================
-country = st.sidebar.selectbox(
-    "Select Country",
-    df.iloc[:, 0].unique()
+st.subheader(
+    "Water Consumption Analysis & Prediction System"
 )
-
-filtered_df = df[df.iloc[:, 0] == country]
 
 # =========================
 # METRICS
@@ -40,32 +59,32 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(
         "Avg Total Consumption",
-        f"{filtered_df.iloc[:,1].mean():.2f} BCM"
+        f"{filtered_df['Water Consumption'].mean():.2f} BCM"
     )
 
 with col2:
     st.metric(
-        "Per Capita Usage",
-        f"{filtered_df.iloc[:,2].mean():.2f} L/day"
+        "Max Consumption",
+        f"{filtered_df['Water Consumption'].max():.2f} BCM"
     )
 
 with col3:
     st.metric(
-        "Agriculture Usage",
-        f"{filtered_df.iloc[:,3].mean():.2f}%"
+        "Min Consumption",
+        f"{filtered_df['Water Consumption'].min():.2f} BCM"
     )
 
 # =========================
-# LINE CHART
+# TREND GRAPH
 # =========================
 st.header("📈 Water Consumption Trend")
 
 fig = px.line(
     filtered_df,
-    x=filtered_df.columns[4],
-    y=filtered_df.columns[1],
+    x="Year",
+    y="Water Consumption",
     markers=True,
-    title="Yearly Water Consumption"
+    title=f"{country} Water Consumption Trend"
 )
 
 st.plotly_chart(fig, use_container_width=True)
@@ -73,44 +92,40 @@ st.plotly_chart(fig, use_container_width=True)
 # =========================
 # BAR CHART
 # =========================
-st.header("🏭 Sector-wise Water Usage")
-
-sector_data = {
-    "Sector": ["Agriculture", "Industrial", "Domestic"],
-    "Usage": [
-        filtered_df.iloc[:,3].mean(),
-        filtered_df.iloc[:,4].mean(),
-        filtered_df.iloc[:,5].mean()
-    ]
-}
-
-sector_df = pd.DataFrame(sector_data)
+st.header("📊 Yearly Water Consumption")
 
 bar_fig = px.bar(
-    sector_df,
-    x="Sector",
-    y="Usage",
-    title="Sector-wise Water Usage (%)"
+    filtered_df,
+    x="Year",
+    y="Water Consumption",
+    color="Water Consumption"
 )
 
 st.plotly_chart(bar_fig, use_container_width=True)
 
 # =========================
-# AI PREDICTION
+# PREDICTION SECTION
 # =========================
-st.header("🤖 AI Water Prediction")
+st.header("🔮 Future Water Prediction")
 
-year_input = st.number_input(
-    "Enter Future Year",
-    min_value=2025,
-    max_value=2100,
-    value=2030
+future_year = st.slider(
+    "Select Future Year",
+    2025,
+    2035,
+    2026
 )
 
-prediction = np.random.randint(500, 800)
+# Simple prediction logic
+last_consumption = filtered_df["Water Consumption"].iloc[-1]
+
+predicted_value = (
+    last_consumption +
+    ((future_year - 2024) * 2)
+)
 
 st.success(
-    f"Predicted Water Consumption for {year_input}: {prediction} BCM"
+    f"Predicted Water Consumption in {future_year}: "
+    f"{predicted_value:.2f} BCM"
 )
 
 # =========================
@@ -124,4 +139,6 @@ st.dataframe(filtered_df)
 # FOOTER
 # =========================
 st.markdown("---")
-st.markdown("Made with ❤️ using Streamlit")
+st.markdown(
+    "Developed using Streamlit, Python, Pandas and Plotly 🚀"
+)
