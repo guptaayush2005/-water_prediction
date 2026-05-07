@@ -27,10 +27,10 @@ st.subheader("Water Consumption Analysis & Prediction System")
 # =========================
 country = st.sidebar.selectbox(
     "Select Country",
-    df["Country"].unique()
+    df.iloc[:, 0].unique()
 )
 
-filtered_df = df[df["Country"] == country]
+filtered_df = df[df.iloc[:, 0] == country]
 
 # =========================
 # METRICS
@@ -40,19 +40,19 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(
         "Avg Total Consumption",
-        f"{filtered_df['Total Water Consumption (BCM)'].mean():.2f} BCM"
+        f"{filtered_df.iloc[:,1].mean():.2f} BCM"
     )
 
 with col2:
     st.metric(
         "Per Capita Usage",
-        f"{filtered_df['Per Capita Usage (Liters per day)'].mean():.2f} L/day"
+        f"{filtered_df.iloc[:,2].mean():.2f} L/day"
     )
 
 with col3:
     st.metric(
         "Agriculture Usage",
-        f"{filtered_df['Agriculture Water Usage (%)'].mean():.2f}%"
+        f"{filtered_df.iloc[:,3].mean():.2f}%"
     )
 
 # =========================
@@ -62,8 +62,8 @@ st.header("📈 Water Consumption Trend")
 
 fig = px.line(
     filtered_df,
-    x="Year",
-    y="Total Water Consumption (BCM)",
+    x=filtered_df.columns[4],
+    y=filtered_df.columns[1],
     markers=True,
     title="Yearly Water Consumption"
 )
@@ -78,9 +78,9 @@ st.header("🏭 Sector-wise Water Usage")
 sector_data = {
     "Sector": ["Agriculture", "Industrial", "Domestic"],
     "Usage": [
-        filtered_df["Agriculture Water Usage (%)"].mean(),
-        filtered_df["Industrial Water Usage (%)"].mean(),
-        filtered_df["Domestic Water Usage (%)"].mean()
+        filtered_df.iloc[:,3].mean(),
+        filtered_df.iloc[:,4].mean(),
+        filtered_df.iloc[:,5].mean()
     ]
 }
 
