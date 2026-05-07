@@ -2,72 +2,126 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
-from sklearn.linear_model import LinearRegression
 
-st.set_page_config(page_title="AI Water Analytics Dashboard", layout="wide")
+# =========================
+# PAGE CONFIG
+# =========================
+st.set_page_config(
+    page_title="AI Water Analytics Dashboard",
+    layout="wide"
+)
 
-# Load dataset
+# =========================
+# LOAD DATA
+# =========================
 df = pd.read_csv("cleaned_global_water_consumption.csv")
 
-# Sidebar
-st.sidebar.title("🌍 Filters")
+# =========================
+# TITLE
+# =========================
+st.title("💧 AI Water Analytics Dashboard")
+st.subheader("Water Consumption Analysis & Prediction System")
 
+# =========================
+# SIDEBAR
+# =========================
 country = st.sidebar.selectbox(
     "Select Country",
     df["Country"].unique()
 )
 
-country_data = df[df["Country"] == country]
+filtered_df = df[df["Country"] == country]
 
-menu = st.sidebar.radio(
-    "Select Option",
-    ["Dashboard", "Prediction"]
+# =========================
+# METRICS
+# =========================
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric(
+        "Avg Total Consumption",
+        f"{filtered_df['Total Water Consumption (BCM)'].mean():.2f} BCM"
+    )
+
+with col2:
+    st.metric(
+        "Per Capita Usage",
+        f"{filtered_df['Per Capita Usage (Liters per day)'].mean():.2f} L/day"
+    )
+
+with col3:
+    st.metric(
+        "Agriculture Usage",
+        f"{filtered_df['Agriculture Water Usage (%)'].mean():.2f}%"
+    )
+
+# =========================
+# LINE CHART
+# =========================
+st.header("📈 Water Consumption Trend")
+
+fig = px.line(
+    filtered_df,
+    x="Year",
+    y="Total Water Consumption (BCM)",
+    markers=True,
+    title="Yearly Water Consumption"
 )
 
-# Title
-st.title("💧 AI Water Analytics Dashboard")
-st.write("Water Consumption Analysis & Prediction System")
+st.plotly_chart(fig, use_container_width=True)
 
-# Dashboard
-if menu == "Dashboard":
+# =========================
+# BAR CHART
+# =========================
+st.header("🏭 Sector-wise Water Usage")
 
-    st.subheader("📊 Country Water Data")
+sector_data = {
+    "Sector": ["Agriculture", "Industrial", "Domestic"],
+    "Usage": [
+        filtered_df["Agriculture Water Usage (%)"].mean(),
+        filtered_df["Industrial Water Usage (%)"].mean(),
+        filtered_df["Domestic Water Usage (%)"].mean()
+    ]
+}
 
-    st.dataframe(country_data)
+sector_df = pd.DataFrame(sector_data)
 
-    fig = px.line(
-        country_data,
-        x="Year",
-        y="Total Water Consumption (Billion Cubic Meters)",
-        markers=True,
-        title="Water Consumption Trend"
-    )
+bar_fig = px.bar(
+    sector_df,
+    x="Sector",
+    y="Usage",
+    title="Sector-wise Water Usage (%)"
+)
 
-    st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(bar_fig, use_container_width=True)
 
-# Prediction
-elif menu == "Prediction":
+# =========================
+# AI PREDICTION
+# =========================
+st.header("🤖 AI Water Prediction")
 
-    st.subheader("🔮 Water Usage Prediction")
+year_input = st.number_input(
+    "Enter Future Year",
+    min_value=2025,
+    max_value=2100,
+    value=2030
+)
 
-    usage = st.number_input(
-        "Enter Average Water Usage",
-        min_value=0.0
-    )
+prediction = np.random.randint(500, 800)
 
-    # Simple ML Model
-    X = np.array([[100], [200], [300], [400], [500]])
-    y = np.array([120, 220, 320, 420, 520])
+st.success(
+    f"Predicted Water Consumption for {year_input}: {prediction} BCM"
+)
 
-    model = LinearRegression()
-    model.fit(X, y)
+# =========================
+# DATA TABLE
+# =========================
+st.header("📋 Dataset Preview")
 
-    if st.button("Predict"):
+st.dataframe(filtered_df)
 
-        prediction = model.predict([[usage]])[0]
-
-        st.success(
-            f"Predicted Water Usage: {prediction:.2f} Litres"
-        )
-
-st.success("✅ Dashboard Running Successfully")
+# =========================
+# FOOTER
+# =========================
+st.markdown("---")
+st.markdown("Made with ❤️ using Streamlit")
